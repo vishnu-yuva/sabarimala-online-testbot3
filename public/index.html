@@ -1,0 +1,300 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sabarimala booking console</title>
+<style>
+:root{--bg:#f4f4f8;--panel:#fff;--ink:#1c2140;--mute:#666b85;--line:#d9dbe6;--accent:#1c2140;--go:#c2570c;--ok:#1a7f45;--logbg:#14172b;--logink:#d8dcf2}
+@media (prefers-color-scheme:dark){:root{--bg:#10121f;--panel:#191c30;--ink:#e6e8f6;--mute:#9aa0bf;--line:#2b2f4a;--accent:#e6e8f6;--go:#f0922f;--ok:#4cc380;--logbg:#0a0b16}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+header{max-width:1280px;margin:0 auto;padding:20px 16px 0}
+h1{margin:0;font:600 26px/1.2 Georgia,serif}
+h1 small{display:block;font:400 14px system-ui,sans-serif;color:var(--mute);margin-top:4px}
+#tabs{display:flex;gap:6px;flex-wrap:wrap;margin-top:16px;align-items:center}
+#tabs button.tab{display:flex;gap:7px;align-items:center;padding:8px 16px;border-radius:8px 8px 0 0;border-bottom:none;font-weight:600}
+#tabs button.tab.sel{background:var(--panel);border-color:var(--go);color:var(--go)}
+#tabs .sp{flex:1}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--line)}
+.dot.on{background:var(--ok);box-shadow:0 0 0 3px color-mix(in srgb,var(--ok) 25%,transparent)}
+main{max-width:1280px;margin:0 auto;padding:0 16px 48px}
+.view{display:none;border-top:2px solid var(--go);padding-top:18px}
+.view.sel{display:block}
+.cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px}
+@media(max-width:820px){.cols{grid-template-columns:1fr}}
+section{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:16px}
+h2{margin:0 0 12px;font-size:16px}
+label{display:block;font-size:13px;color:var(--mute);margin:10px 0 3px}
+input,select,textarea{width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:6px;background:transparent;color:var(--ink);font:inherit}
+input:focus,select:focus,textarea:focus,button:focus-visible{outline:2px solid var(--go);outline-offset:1px}
+.row{display:flex;gap:8px;align-items:center}.row>*{flex:1}.row>.x{flex:0 0 auto}
+.three{display:grid;grid-template-columns:2fr 1fr 1.4fr;gap:8px}
+.hint{font-size:12.5px;color:var(--mute);margin:4px 0 0}
+button{font:inherit;border:1px solid var(--line);background:transparent;color:var(--ink);padding:7px 12px;border-radius:6px;cursor:pointer}
+button.x{padding:6px 10px}
+.add{margin-top:8px}
+.radio{display:flex;gap:18px;margin-top:6px}.radio label{display:flex;gap:6px;align-items:center;color:var(--ink);margin:0;font-size:15px}.radio input{width:auto}
+.check{display:flex;gap:8px;align-items:center;color:var(--ink);font-size:14px;margin-top:10px}.check input{width:auto}
+details{margin-top:14px}summary{cursor:pointer;color:var(--mute);font-size:13px}
+.bar{position:sticky;bottom:0;display:flex;gap:10px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px 16px;margin-top:20px;z-index:2}
+.go{background:var(--go);border-color:var(--go);color:#fff;font-weight:600;padding:9px 22px}
+.go:disabled{opacity:.5;cursor:default}
+.stop{border-color:var(--go);color:var(--go)}
+.stop:disabled{opacity:.5;cursor:default}
+.state{margin-left:auto;font-size:14px;color:var(--mute)}
+.state.on{color:var(--ok);font-weight:600}
+.err{color:#b3261e;font-size:14px;display:none;white-space:pre-line;border:1px solid #b3261e;border-radius:8px;padding:10px 14px;margin-top:20px}
+.log{background:var(--logbg);color:var(--logink);border-radius:8px;padding:12px 14px;height:340px;overflow:auto;font:12.5px/1.55 ui-monospace,Menlo,Consolas,monospace;white-space:pre-wrap;word-break:break-word}
+.view>.log{margin-top:20px}
+.prog{margin:0 0 16px;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px 14px}
+.pane .prog{margin:0 0 8px;padding:8px 10px;font-size:13px;max-height:260px;overflow:auto}
+.prog .sum{display:flex;gap:14px;flex-wrap:wrap;align-items:baseline;font-weight:600}
+.prog .sum .ok{color:var(--ok)}.prog .sum .wait{color:var(--go)}
+.prog .step{font-size:13px;color:var(--mute);margin:2px 0 8px}
+.prog table{width:100%;border-collapse:collapse;font-size:13.5px}
+.prog th{text-align:left;color:var(--mute);font-weight:500;font-size:12px;padding:3px 8px 3px 0}
+.prog td{padding:4px 8px 4px 0;border-top:1px solid var(--line)}
+.badge{display:inline-block;padding:1px 9px;border-radius:999px;font-size:12px;font-weight:600;border:1px solid var(--line);color:var(--mute)}
+.badge.booked{color:var(--ok);border-color:var(--ok)}
+.badge.booking{color:var(--go);border-color:var(--go)}
+.badge.skipped{color:#b45309;border-color:#b45309}
+.badge.removed{color:var(--mute);border-style:dashed}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}
+@media(max-width:900px){.grid{grid-template-columns:1fr}}
+.pane{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px}
+.pane .log{height:300px}
+.pane .head{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+.pane .head b{font-size:15px}
+.pane .head .state{margin-left:auto}
+.pane .head button{padding:4px 10px;font-size:13px}
+.note{background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--go);border-radius:8px;padding:10px 14px;margin-bottom:16px;font-size:13.5px;color:var(--mute)}
+#tabs button.addbot{border-style:dashed;color:var(--go);border-color:var(--go);font-weight:600}
+dialog{border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--ink);padding:20px;width:min(380px,92vw)}
+dialog::backdrop{background:rgba(0,0,0,.45)}
+dialog h2{margin-bottom:6px}
+dialog .btns{display:flex;gap:8px;justify-content:flex-end;margin-top:14px}
+.dlgerr{color:#b3261e;font-size:13px;min-height:18px;margin-top:6px}
+.rm{margin-left:8px}.rm:disabled{opacity:.5;cursor:default}
+</style></head><body>
+<header>
+<h1>Sabarimala booking console<small>Add as many independent bots as you need, each with its own name, settings and console. Each bot runs in the background with no browser window and never stops until every pilgrim is booked (or you press Stop). <b>UI build: dynamic bots v3</b></small></h1>
+<nav id="tabs" aria-label="Bots"><button class="tab" id="allTab" data-view="all">All consoles</button><button class="addbot" id="addBot">+ Add bot</button><span class="sp"></span><button class="stop" id="stopAll">Stop all bots</button></nav>
+</header>
+<main id="views"><div class="view" id="view-all"><div class="grid" id="grid"></div></div></main>
+<dialog id="addDlg"><form id="addForm" autocomplete="off">
+<h2>Add a bot</h2>
+<label for="addName">Bot name</label><input id="addName" maxlength="40" placeholder="e.g. Ravi - Family A" required>
+<div class="dlgerr" id="addErr" role="alert"></div>
+<div class="btns"><button type="button" id="addCancel">Cancel</button><button class="go" id="addOk" type="submit">Create bot</button></div>
+</form></dialog>
+
+<script>
+const $=id=>document.getElementById(id);
+const REL=['Father','Mother','Son','Daughter','Brother','Sister','Spouse'];
+const relOpts=REL.map(r=>`<option>${r}</option>`).join('');
+const state={};   // id -> {name, running, logEls:[...]}
+const MAXLINES=2000;
+const esc=t=>String(t==null?'':t).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+/* ---------- build one bot (tab + panel + console pane) ---------- */
+function panelHTML(n,name){const p=`b${n}-`;const nm=esc(name);return `
+<div class="prog" id="${p}prog"></div>
+<div class="note"><b>${nm}</b> has its own browser session and login. Use a <b>different account (or different pilgrims) for each bot</b>: the wishlist belongs to the account, so two bots on the same account would clear each other's wishlist.</div>
+<div class="cols">
+<section>
+<h2>Account</h2>
+<label for="${p}u">Username (mobile number)</label><input id="${p}u" autocomplete="off">
+<label for="${p}p">Password</label><input id="${p}p" type="password" autocomplete="off">
+<p class="hint">The password is kept only while this page is open and is never saved.</p>
+
+<h2 style="margin-top:22px">Dates</h2>
+<p class="hint" style="margin:0 0 6px">Most preferred first. The first one that opens up is booked.</p>
+<div id="${p}dates"></div><button class="add" id="${p}addDate">Add date</button>
+
+<h2 style="margin-top:22px">Pilgrims</h2>
+<label for="${p}rows">Pilgrim rows to tick</label><input id="${p}rows" placeholder="2,3,4,5">
+<p class="hint">Row numbers on the pilgrim list, counting from 1.</p>
+</section>
+
+<section>
+<h2>Nominee</h2>
+<div class="three">
+<div><label for="${p}nn">Name</label><input id="${p}nn" maxlength="32"></div>
+<div><label for="${p}na">Age</label><input id="${p}na" maxlength="3" inputmode="numeric"></div>
+<div><label for="${p}nr">Relation</label><select id="${p}nr">${relOpts}</select></div></div>
+<p class="hint">Used for every pilgrim row unless you override a row below. "Row" below is the pilgrim row number.</p>
+<div id="${p}ovs"></div><button class="add" id="${p}addOv">Different nominee for one row</button>
+
+<h2 style="margin-top:22px">Time slot</h2>
+<div class="radio">
+<label><input type="radio" name="${p}sm" value="auto" checked> Auto</label>
+<label><input type="radio" name="${p}sm" value="particular"> Particular slots</label></div>
+<p class="hint">Auto takes the first slot with room for everyone, otherwise the one with most seats.</p>
+<div id="${p}slotBox" hidden><label for="${p}slots">Preferred slots, one per line, most preferred first</label>
+<textarea id="${p}slots" rows="3" placeholder="05:00 - 06:00"></textarea>
+<p class="hint">Write the time exactly as the site shows it. If none has seats, the attempt restarts.</p></div>
+
+<details><summary>More settings</summary>
+<div class="row"><div><label for="${p}mr">Retries before the cool-down</label><input id="${p}mr" type="number" min="1" value="5"></div>
+<div><label for="${p}rd">Wait between retries (sec)</label><input id="${p}rd" type="number" min="1" value="5"></div>
+<div><label for="${p}cd">Cool-down before fresh login (sec)</label><input id="${p}cd" type="number" min="1" value="60"></div></div>
+<p class="hint">After the retries are used up the browser session is closed, the bot waits for the cool-down, then starts again from login. It never gives up.</p>
+<label for="${p}rv">Route value (1 = Pamba - Marakkoottam - 4 Kms)</label><input id="${p}rv" value="1">
+<label class="check"><input type="checkbox" id="${p}show"> Show the browser window (for debugging)</label>
+<label class="check"><input type="checkbox" id="${p}chrome"> Use my installed Google Chrome (on your own PC this matches the original script; not available on Railway)</label>
+</details>
+</section>
+</div>
+<div class="err" id="${p}err" role="alert"></div>
+<div class="bar"><button class="go" id="${p}go">Start ${nm}</button><button class="stop" id="${p}stop" disabled>Stop ${nm}</button><button class="rm" id="${p}rm">Remove bot</button><span class="state" id="${p}state">Idle</span></div>
+<div class="log" id="${p}log" aria-live="polite"></div>`}
+
+function ensureBot(n,name){
+  if(state[n]){ // already built: only refresh the name
+    if(state[n].name!==name){state[n].name=name;$('tab'+n).lastChild.textContent=name;$('gname'+n).textContent=name;
+      $(`b${n}-go`).textContent='Start '+name;$(`b${n}-stop`).textContent='Stop '+name}
+    return}
+  const p=`b${n}-`;
+  $('allTab').insertAdjacentHTML('beforebegin',`<button class="tab" id="tab${n}" data-view="bot${n}"><span class="dot" id="dot${n}"></span>${esc(name)}</button>`);
+  $('views').insertAdjacentHTML('beforeend',`<div class="view" id="view-bot${n}">${panelHTML(n,name)}</div>`);
+  $('grid').insertAdjacentHTML('beforeend',`<div class="pane" id="pane${n}"><div class="head"><span class="dot" id="gdot${n}"></span><b id="gname${n}">${esc(name)}</b><span class="state" id="gstate${n}">Idle</span><button class="stop" id="gstop${n}" disabled>Stop</button></div><div class="prog" id="gprog${n}"></div><div class="log" id="glog${n}" aria-live="polite"></div></div>`);
+  state[n]={name,running:false,logEls:[$(p+'log'),$('glog'+n)]};
+  restore(n);
+  $('tab'+n).onclick=()=>{location.hash='#bot'+n};
+  $(p+'addDate').onclick=()=>addDate(n);$(p+'addOv').onclick=()=>addOv(n);
+  document.querySelectorAll(`[name="${p}sm"]`).forEach(r=>r.onchange=()=>{$(p+'slotBox').hidden=document.querySelector(`[name="${p}sm"]:checked`).value!=='particular';save(n)});
+  ['u','rows','nn','na','nr','slots','mr','rd','cd','rv','show','chrome'].forEach(i=>$(p+i).addEventListener('input',()=>save(n)));
+  $(p+'go').onclick=()=>startBot(n);
+  $(p+'stop').onclick=()=>fetch(`/api/bots/${n}/stop`,{method:'POST'});
+  $('gstop'+n).onclick=()=>fetch(`/api/bots/${n}/stop`,{method:'POST'});
+  $(p+'rm').onclick=()=>removeBot(n);
+  renderProgress(n,null);
+}
+function dropBot(n){
+  if(!state[n])return;
+  for(const id of ['tab'+n,'view-bot'+n,'pane'+n]){const el=$(id);if(el)el.remove()}
+  try{localStorage.removeItem('sabari.bot.'+n)}catch(e){}
+  delete state[n];
+}
+function syncList(list){
+  const ids=new Set(list.map(b=>b.id));
+  Object.keys(state).map(Number).forEach(n=>{if(!ids.has(n))dropBot(n)});
+  list.forEach(b=>ensureBot(b.id,b.name));
+  // keep tabs in server order
+  list.forEach(b=>$('allTab').before($('tab'+b.id)));
+  show();
+}
+
+/* ---------- per-bot form logic ---------- */
+function addDate(n,v=''){const d=document.createElement('div');d.className='row';d.style.marginBottom='6px';
+ d.innerHTML=`<input type="date"><button class="x" title="Remove" aria-label="Remove date">✕</button>`;
+ d.querySelector('input').value=v;
+ d.querySelector('button').onclick=()=>{d.remove();save(n)};d.querySelector('input').onchange=()=>save(n);$(`b${n}-dates`).append(d)}
+function addOv(n,o={}){const d=document.createElement('div');d.className='row';d.style.marginTop='8px';
+ d.innerHTML=`<input class="r" placeholder="Row" inputmode="numeric" style="flex:0 0 64px"><input class="n" placeholder="Name"><input class="a" placeholder="Age" style="flex:0 0 64px"><select class="l">${relOpts}</select><button class="x" aria-label="Remove">✕</button>`;
+ d.querySelector('.r').value=o.row||'';d.querySelector('.n').value=o.name||'';d.querySelector('.a').value=o.age||'';
+ if(o.relation)d.querySelector('select').value=o.relation;
+ d.querySelector('button').onclick=()=>{d.remove();save(n)};d.oninput=()=>save(n);$(`b${n}-ovs`).append(d)}
+
+function collect(n,forSave){const p=`b${n}-`;return{
+ username:$(p+'u').value.trim(),password:forSave?'':$(p+'p').value,
+ dates:[...$(p+'dates').querySelectorAll('input')].map(i=>i.value).filter(Boolean),
+ pilgrimRows:$(p+'rows').value,
+ nominee:{name:$(p+'nn').value.trim(),age:$(p+'na').value.trim(),relation:$(p+'nr').value},
+ overrides:[...$(p+'ovs').children].map(d=>({row:+d.querySelector('.r').value,name:d.querySelector('.n').value.trim(),age:d.querySelector('.a').value.trim(),relation:d.querySelector('.l').value})).filter(o=>o.row),
+ slotMode:document.querySelector(`[name="${p}sm"]:checked`).value,slots:$(p+'slots').value,
+ routeValue:$(p+'rv').value,maxRetries:$(p+'mr').value,retryDelaySec:$(p+'rd').value,cooldownSec:$(p+'cd').value,
+ headless:!$(p+'show').checked,useInstalledChrome:$(p+'chrome').checked}}
+
+const save=n=>{try{localStorage.setItem('sabari.bot.'+n,JSON.stringify(collect(n,true)))}catch(e){}};
+
+function restore(n){const p=`b${n}-`;let s={};
+ try{s=JSON.parse(localStorage.getItem('sabari.bot.'+n)||(n===1?localStorage.getItem('sabari'):null)||'{}')}catch(e){}
+ $(p+'u').value=s.username||'';$(p+'rows').value=s.pilgrimRows||'2,3,4,5';
+ (s.dates&&s.dates.length?s.dates:['']).forEach(v=>addDate(n,v));
+ const nm=s.nominee||{};$(p+'nn').value=nm.name||'';$(p+'na').value=nm.age||'';$(p+'nr').value=nm.relation||'Father';
+ (s.overrides||[]).forEach(o=>addOv(n,o));
+ if(s.slotMode==='particular'){document.querySelector(`[name="${p}sm"][value=particular]`).checked=true;$(p+'slotBox').hidden=false}
+ $(p+'slots').value=s.slots||'';
+ $(p+'mr').value=s.maxRetries||5;$(p+'rd').value=s.retryDelaySec||5;$(p+'cd').value=s.cooldownSec||60;$(p+'rv').value=s.routeValue||'1';
+ $(p+'show').checked=s.headless===false;$(p+'chrome').checked=!!s.useInstalledChrome}
+
+async function startBot(n){const p=`b${n}-`;$(p+'err').style.display='none';
+ try{
+  const r=await fetch(`/api/bots/${n}/start`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(collect(n,false))});
+  if(!r.ok){const j=await r.json();$(p+'err').textContent=(j.errors||['Could not start.']).join('\n');$(p+'err').style.display='block'}
+ }catch(e){$(p+'err').textContent='Server not reachable.';$(p+'err').style.display='block'}}
+
+async function removeBot(n){
+  if(!state[n]||!confirm(`Remove "${state[n].name}" and its saved settings?`))return;
+  const p=`b${n}-`;
+  try{const r=await fetch(`/api/bots/${n}/remove`,{method:'POST'});
+   if(!r.ok){const j=await r.json();$(p+'err').textContent=(j.errors||['Could not remove.']).join('\n');$(p+'err').style.display='block'}
+  }catch(e){$(p+'err').textContent='Server not reachable.';$(p+'err').style.display='block'}}
+
+/* ---------- add-bot dialog ---------- */
+const dlg=$('addDlg');
+$('addBot').onclick=()=>{$('addName').value='';$('addErr').textContent='';dlg.showModal();$('addName').focus()};
+$('addCancel').onclick=()=>dlg.close();
+$('addForm').onsubmit=async e=>{e.preventDefault();
+ const name=$('addName').value.trim();if(!name){$('addErr').textContent='Enter a bot name.';return}
+ $('addOk').disabled=true;
+ try{
+  const r=await fetch('/api/bots',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name})});
+  const j=await r.json();
+  if(!r.ok){$('addErr').textContent=(j.errors||['Could not add the bot.']).join(' ');return}
+  ensureBot(j.id,j.name);dlg.close();location.hash='#bot'+j.id;show();
+ }catch(err){$('addErr').textContent='Server not reachable.'}
+ finally{$('addOk').disabled=false}};
+$('stopAll').onclick=()=>fetch('/api/stop',{method:'POST'});
+
+/* ---------- running state + logs ---------- */
+function setRunning(n,r){if(!state[n])return;state[n].running=r;const p=`b${n}-`;
+ $(p+'go').disabled=r;$(p+'stop').disabled=!r;$(p+'rm').disabled=r;$('gstop'+n).disabled=!r;
+ for(const id of [p+'state','gstate'+n]){$(id).textContent=r?'Running':'Idle';$(id).className='state'+(r?' on':'')}
+ $('dot'+n).className='dot'+(r?' on':'');$('gdot'+n).className='dot'+(r?' on':'')}
+function addLog(n,t){if(!state[n])return;for(const l of state[n].logEls){
+  const end=l.scrollTop+l.clientHeight>=l.scrollHeight-30;
+  l.append(t+'\n');
+  while(l.childNodes.length>MAXLINES)l.removeChild(l.firstChild);
+  if(end)l.scrollTop=l.scrollHeight}}
+function clearLog(n){if(state[n])state[n].logEls.forEach(l=>l.textContent='')}
+
+function fmtTime(iso){if(!iso)return '';const d=new Date(iso);return d.toLocaleDateString([], {day:'2-digit',month:'short'})+' '+d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'})}
+function renderProgress(n,pr){if(!state[n])return;
+ let html='<div class="sum"><span>Booking status</span></div><div class="step">Not started. Press Start and the booked / remaining pilgrims will show here.</div>';
+ if(pr&&pr.items&&pr.items.length){
+  const total=pr.items.length,booked=pr.items.filter(i=>i.status==='booked').length,removed=pr.items.filter(i=>i.status==='removed').length,left=total-booked-removed;
+  const label={pending:'Waiting',booking:'In progress',booked:'Booked',skipped:'Skipped, retry later',removed:'Removed (already booked)'};
+  html=`<div class="sum"><span>Booking status</span><span>Pilgrims: ${total}</span><span class="ok">Booked: ${booked}</span><span class="wait">Remaining: ${left}</span>${removed?`<span>Removed: ${removed}</span>`:''}</div>`
+   +(pr.step?`<div class="step">${esc(pr.step)}</div>`:'')
+   +(pr.lastMessage?`<div class="step" style="color:#b45309">Last site message (${esc(fmtTime(pr.lastMessage.at))}): "${esc(pr.lastMessage.text)}" &rarr; ${esc(pr.lastMessage.action)}${pr.lastMessage.rows&&pr.lastMessage.rows.length?' (row '+pr.lastMessage.rows.join(', ')+')':''}</div>`:'')
+   +`<table><thead><tr><th>Pilgrim row</th><th>Status</th><th>Booked at</th><th>Date</th><th>Slot</th><th>Transaction ID</th></tr></thead><tbody>`
+   +pr.items.map(i=>`<tr><td>Row ${i.row}${i.label?` <span class="step" style="margin:0">(${esc(i.label)})</span>`:''}</td><td><span class="badge ${i.status==='pending'&&i.skipped?'skipped':i.status}">${label[i.status==='pending'&&i.skipped?'skipped':i.status]||i.status}</span>${i.note&&(i.status==='pending'||i.status==='removed')?`<div class="step" style="margin:3px 0 0;color:#b45309">${esc(i.note)}</div>`:''}</td><td>${i.status==='booked'?esc(fmtTime(i.bookedAt)):'-'}</td><td>${i.status!=='pending'?esc(i.date||'-'):'-'}</td><td>${i.status!=='pending'?esc(i.slot||'-'):'-'}</td><td>${i.status==='booked'?esc(i.txnId||'-'):'-'}</td></tr>`).join('')
+   +`</tbody></table>`;
+ }
+ for(const id of [`b${n}-prog`,`gprog${n}`])$(id).innerHTML=html;
+}
+
+/* ---------- live events ---------- */
+const es=new EventSource('/api/events');
+es.onmessage=e=>{const m=JSON.parse(e.data);
+ if(m.type==='init'){
+  syncList(m.data.list||[]);
+  for(const b of m.data.list||[]){const st=m.data.bots[b.id]||{running:false,logs:[]};clearLog(b.id);(st.logs||[]).forEach(t=>addLog(b.id,t));setRunning(b.id,st.running);renderProgress(b.id,st.progress)}}
+ else if(m.type==='bots')syncList(m.data.list||[]);
+ else if(m.type==='log')addLog(m.bot,m.data);
+ else if(m.type==='progress')renderProgress(m.bot,m.data);
+ else if(m.type==='status'){if(!state[m.bot])return;if(m.data.running){clearLog(m.bot);renderProgress(m.bot,null)}setRunning(m.bot,m.data.running)}};
+es.onerror=()=>{for(const n in state){$(`b${n}-state`).textContent='Server not reachable'}};
+
+/* ---------- tabs (also reachable by URL:  /#bot<id>  and  /#all) ---------- */
+function show(){
+ const ids=Object.keys(state);
+ let h=(location.hash||'').slice(1);
+ let id=(h==='all'||(/^bot\d+$/.test(h)&&state[h.slice(3)]))?h:(ids.length?'bot'+ids[0]:'all');
+ document.querySelectorAll('.view').forEach(v=>v.classList.toggle('sel',v.id==='view-'+id));
+ document.querySelectorAll('#tabs .tab').forEach(t=>t.classList.toggle('sel',t.dataset.view===id));
+ document.title=(id==='all'?'All bots':(state[id.slice(3)]||{}).name||'Bot')+' - Sabarimala booking console'}
+$('allTab').onclick=()=>{location.hash='#all'};
+window.addEventListener('hashchange',show);show();
+</script></body></html>
